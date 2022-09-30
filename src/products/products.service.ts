@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { Repository } from 'typeorm';
@@ -7,16 +8,17 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { validate as isUUID } from 'uuid';
-import { BadRequestException, InternalServerErrorException } from '@nestjs/common/exceptions';
-import { Logger } from '@nestjs/common/services';
+import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
 
 
 @Injectable()
 export class ProductsService {
 
-  private readonly logger: Logger;
-
+  private readonly logger = new Logger()
+  
   constructor(
+
+    // Inyectamos el repositorio
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
   ) {}
@@ -29,6 +31,7 @@ export class ProductsService {
 
       return product;
     } catch (error: any) { this.handleDBExceptions(error) }
+
   }
 
   findAll(paginationDto?: PaginationDto) {
@@ -90,5 +93,13 @@ export class ProductsService {
 
     this.logger.error(error)
     throw new InternalServerErrorException('Unexpected error, check server logs')
+  }
+
+  private handelExceptions = (error: any) => {
+
+    if(error.code === '23055') throw new BadRequestException(error.detail)
+      
+      this.logger.error(error)
+      throw new InternalServerErrorException('Error!, check server logs')
   }
 }

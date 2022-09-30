@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsPositive,
   MinLength,
+  IsDecimal,
 } from 'class-validator';
 
 export class CreateProductDto {
